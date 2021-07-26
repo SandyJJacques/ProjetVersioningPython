@@ -4,16 +4,6 @@ from tkinter import *
 from tkinter.messagebox import *  # boîte de dialogue
 
 
-def verification():
-    if mdp.get() == 'python27':
-        # le mot de passe est bon : on affiche une boîte de dialogue puis on ferme la fenêtre
-        showinfo('Résultat', 'Mot de passe correct.\nAu revoir !')
-        Mafenetre.destroy()
-    else:
-        # le mot de passe est incorrect : on affiche une boîte de dialogue
-        showwarning('Résultat', 'Mot de passe incorrect.\nVeuillez recommencer !')
-        mdp.set('')
-
 
 # Création de la fenêtre principale (main window)
 Mafenetre = Tk()
