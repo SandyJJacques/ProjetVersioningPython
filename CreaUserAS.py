@@ -1,4 +1,4 @@
-ef create_user(ville):
+def create_user(ville):
     create=y
 
     while create =="y" or create == "Y":
