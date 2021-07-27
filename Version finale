@@ -1,0 +1,436 @@
+#Abdoulaye DIENG   Mehdi OMALK    Sandy JEAN-JACQUES
+
+
+import random
+import string
+import hashlib
+import os
+import socket
+import mysql.connector
+from ftplib import FTP
+
+
+#creation utilisateur
+def create_user(ville):
+    create = "y"                    #condition de lancement creation
+
+    while create == "y" or create == "Y":
+        id1 = input("id : ")                #saisie des renseignements
+        nom = input("Nom : ")
+        prenom = input("Prénom :")
+        tel = input("N° de téléphone : ")
+        longueur = len(tel)
+        if longueur != 10:                  #verification longueur telephone
+            tel = input("Le numéro de téléphone n'est pas valide. Merci de le saisir à nouveau (10 chiffres) : ")
+
+        mail = (prenom + "." + nom + "@netway.fr")      #creation mail
+        mail = (mail.lower())
+        print("Mail : ", mail)          #affichange mail
+
+        mdp = input("Mot de passe : ")
+
+        db = mysql.connector.connect(     #connexion à bdd 
+            host='localhost',
+            user='root',
+            password='Projet2020!',
+            port='3306',
+            database='python'
+        )
+        mycursor = db.cursor()      
+
+        if ville == 'gre':                  #creation user dans table bdd
+            mycursor.execute(
+                'INSERT INTO gre (id, Nom, Prénom, N_tel, mail, Mot_De_Passe) VALUES (%s, %s, %s, %s, %s, %s)',
+                (id1, nom, prenom, tel, mail, mdp))
+            db.commit()
+            print ("L'utilisateur a été créé")
+
+        elif ville == 'ren':
+            mycursor.execute(
+                'INSERT INTO ren (id, Nom, Prénom, N_tel, mail, Mot_De_Passe) VALUES (%s, %s, %s, %s, %s, %s)',
+                (id1, nom, prenom, tel, mail, mdp))
+            db.commit()
+            print ("L'utilisateur a été créé")
+
+        elif ville == 'str':
+            mycursor.execute(
+                'INSERT INTO str (id, Nom, Prénom, N_tel, mail, Mot_De_Passe) VALUES (%s, %s, %s, %s, %s, %s)',
+                (id1, nom, prenom, tel, mail, mdp))
+            db.commit()
+            print ("L'utilisateur a été créé")
+
+        elif ville == 'par':
+            mycursor.execute(
+                'INSERT INTO par (id, Nom, Prénom, N_tel, mail, Mot_De_Passe) VALUES (%s, %s, %s, %s, %s, %s)',
+                (id1, nom, prenom, tel, mail, mdp))
+            db.commit()
+            print ("L'utilisateur a été créé")
+
+        create = input("Souhaitez-vous créer un autre utilisateur ? [y] [n] :")
+        if create == "y":
+            create_user(ville)
+        else:
+            return (login)
+    return (login)
+
+
+def change_mdp(login, mdp, ville):    #changer mdp
+    db = mysql.connector.connect(                   #connexion bdd
+        host='localhost',
+        user='root',
+        password='Projet2020!',
+        port='3306',
+        database='python'
+    )
+    mycursor = db.cursor()
+    mycursor.execute("UPDATE %s SET Mot_de_passe= %s WHERE id = %s", (ville, mdp, login))
+    db.commit()
+
+    print ("Le mot de passe a été modifié")
+    return(login)
+
+def delete_user(login, ville):             #suppression user
+    
+
+    db = mysql.connector.connect(      #connexion bdd
+        host='localhost',
+        user='root',
+        password='Projet2020!',
+        port='3306',
+        database='python'
+    )
+    mycursor = db.cursor()
+    mycursor.execute("DELETE FROM %s WHERE id = %s",(ville, login))       #commande sql
+    db.commit()                 #enregistrement de la commande
+    
+    print("L'utilisateur a été supprimé")
+    return(login)           #fin fonction
+
+
+def showlist(ville):                #voir liste de la table 
+
+    db = mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='Projet2020!',
+        port='3306',
+        database='python'
+    )
+    mycursor = db.cursor()
+    mycursor.execute("SELECT Nom, Prénom, mail FROM ville ",(ville))
+    print("Voici les utilisateurs de ", ville, " \n")
+    rows = mycursor.fetchall()  #
+    print(rows)
+
+
+    return ("done")
+    
+#menu de gestion des utilisateurs pour les adminAC
+def gestion_userAC(ville):
+    print("1- Créer utilisateur")           #choix possibles
+    print("2- Modifier mot de passe d'utilisateur")
+    print("3- Supprimer utilisateur")
+    print("4- Voir liste des utilisateurs")
+    print("5- Quitter")
+
+    choice = input("Que souhaitez-vous faire ? ")       #saisi du choix de l'admin
+
+    if int(choice) == 1:
+        create_user(ville)
+
+    elif int(choice) == 2:
+        login = input("id de l'utilisateur : ")
+        mdp = input("Nouveau mot de passe : ")
+        change_mdp(login, mdp, ville)           #lancement script modification de mdp
+
+    elif int(choice) == 3:
+        login = input("id de l'utilisateur à supprimer : ")
+        delete_user(login, ville)                      #lancement script supression
+
+    elif int(choice) == 4:
+        showlist(ville)
+
+    elif int(choice) == 5:
+        exit()
+
+    else:
+
+        print("Merci de rentrer une valeur valide \n")      
+        gestion_userAC(ville)
+
+    return(ville)
+
+
+def gestion_ftp(login, mdp):        #focntion getsion ftp
+
+    ftp_host = 'localhost'      #connection à filezilla
+
+
+    path='\AUTRES'
+
+    ftp = FTP(ftp_host, login, mdp)
+    print (ftp.getwelcome())        #affichage d'accueil
+
+
+    print("1- Afficher répertoire")
+    print("2- Créer un dossier")
+    print("3- Quitter")
+
+    choice = 0
+    while (int(choice)<1 or int(choice)>3):         #choix de l'admin
+        choice=input("Que souhaitez-vous faire ? ")
+#possibilité sur ftp
+    if int(choice) == 1:
+        print ("contenu du repertoire courant :")
+        print(ftp.dir())
+        return choice
+    elif int(choice) == 2:
+        nom = input("choisir nom dossier : ")
+        ftp.mkd(nom)
+        print(ftp.dir())
+        return choice
+    elif int(choice) == 3:
+        return choice
+    
+    print ("contenu du repertoire courant :")
+    print(ftp.dir())
+
+#fonction de scan de port
+def scan_port():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)           #scan de port
+    s.settimeout(5)
+
+    ip = input("IP à scanner : ")           #saisie ip a scanner
+    port = input("Port à scanner : ")       #saisie port à scanner
+    port2 = int(port)
+
+    if s.connect_ex((ip, port2)):           #verification ouverture port
+        print("Le port est fermé")
+
+    else:
+        print("Le port est ouvert")
+
+    choice = input("Souhaitez-vous scanner un autre port  ? [y] [n] : ")
+
+    if choice == "y" or choice == "Y":      #voir si admin veut effecter autrre chose
+        scan_port()
+
+    else:
+        return ("ok")
+
+#fonction brute force
+def brute_force():
+    mdp_a_touver = ""  # La variable est definie
+    chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&é(-è_çà)=^$*ù!:;,<>°+£¨%µ§/.?~#'{[|`\^@]}¤"  # Caractères possibles
+
+    chars_list = list(chars)  # Defini la variable chars en liste
+
+    mdp = input("Entrez votre mot de passe : ")  # L'utilisateur doit rentrer son mot de passe
+
+    while (mdp_a_touver != mdp):
+        mdp_a_touver = random.choices(chars_list, k=len(mdp))  # tant que le mdp à trouver est different du bon
+
+        print(str(mdp_a_touver))
+
+        if (mdp_a_touver == list(mdp)):  # condition d'arret si mdp trouvé
+            print("Le mot de passe est : ", mdp_a_touver)
+            break
+
+#fonction boite a outil pour adminas
+def boite_a_outils():
+    print("1- Scan de ports")
+    print("2- Simulation force brute")
+    print("3- Quitter")
+
+    choice = input("Ques ouhaites-vous faire ? ")       #lancement du programme en fonction du souhait de l'adminas
+
+    if int(choice) == 1:
+
+        scan_port()
+
+        boite_a_outils()
+
+    elif int(choice) == 2:
+
+        brute_force()
+
+        boite_a_outils()
+
+    elif int(choice) == 3:
+
+        return ("done")
+
+    else:
+
+        print("Merci de rentrer une valeur valide \n")
+        boite_a_outils()
+
+
+def gestion_userAS():           #fonction gestio de user pour adminas
+    print("1- Créer utilisateur")
+    print("2- Modifier mot de passe d'utilisateur")
+    print("3- Supprimer utilisateur")
+    print("4- Voir liste des utilisateurs")
+    print("5- Quitter")
+
+    choice = 0
+    while (int(choice) < 1 or int(choice) > 5):             #choix de l'admin pour lancer fonction souhaitée
+        choice = input("Que souhaitez-vous faire ? ")
+
+    if int(choice) == 1:
+        ville = input("Dans quelle ville se situe l'utilisateur ? ")
+        create_user(ville)
+
+    elif int(choice) == 2:
+        login = input("id de l'utilisateur : ")
+        mdp = input("Nouveau mot de passe : ")
+        ville = input("Ville de l'utilisateur : ")
+        change_mdp(login, mdp, ville)
+
+
+    elif int(choice) == 3:
+        ville = input("Dans quelle ville se situe l'utilisateur ? ")
+        delete_user(ville)
+
+    elif int(choice) == 4:
+        ville = input("La liste des utilisateurs de quelle ville souhaitez-vous ? ")
+        showlist(ville)
+
+    elif int(choice) == 5:
+        exit()
+
+
+# Saisi des identifiants
+login = input('Login : ')           #saisi des identifiants de la personne connectée
+mdp = input('Password : ')
+
+##connexion(login, mdp)
+
+ville = (login[slice(5, 8)])        #récupere la ville de l'admin en prenant les derniers caracteres de son login pour qu'il ne puisse agir que sur cette ville
+
+if login == "admingre" or login == "adminstr" or login == "adminren":       #menu pour adminac
+    print("1- Gérer utilisateurs")
+    print("2- Gérer FTP")
+    print("3 - Quitter")
+
+    choice = 0
+    while (int(choice) < 1 or int(choice) > 3):
+        choice = input("Que souhaitez-vous faire ? ")
+
+    if int(choice) == 1:
+        gestion_userAC(ville)
+
+        choice=input("Souhaitez-vous faire autre chose ? [y] [n]")
+        
+
+    elif int(choice) == 2:
+      gestion_ftp(login, mdp)
+
+    elif int(choice) == 3:
+        exit()
+
+elif login == "adminas":                #menu pour adminas
+    print("1- Gérer utilisateurs")
+    print("2- Gérer FTP")
+    print("3- Boîte à outils")
+    print("4- Quitter")
+
+    choice = 0
+    while (int(choice) < 1 or int(choice) > 4):
+        choice = input("Que souhaitez-vous faire ? ")
+
+    if int(choice) == 1:
+        gestion_userAS()
+
+    elif int(choice) == 2:
+        gestion_ftpAS(login, mdp)
+
+    elif int(choice) == 3:
+        boite_a_outils()
+
+    elif int(choice) == 4:
+        exit()
+
+else:                                                           #menu pour utilisateur lambda
+    print("1- Modifier mon mot de passe")
+    print("2- Quitter")
+
+    choice = 0
+    while (int(choice) < 1 or int(choice) > 2):
+        choice = input("Que souhaitez-vous faire ? ")
+
+    if int(choice) == 1:
+
+        mdp = input("Nouveau mot de passe : ")          #possibilité d'action de l'utilisateur lambda
+        ville = input("Quel est votre site ? ")
+        change_mdp(login, mdp, ville)
+
+    elif int(choice) == 2:
+        exit()
+
+##def connexion(login, mdp):
+##    # Vérification si mdp correspond au login saisi
+##    # Connexion base de donnée
+##    db = mysql.connector.connect(
+##        host='localhost',
+##        user='root',
+##        password='Projet2020!',
+##        port='3306',
+##        database='python'
+##    )
+##    mycursor = db.cursor()
+##    ville = input('Quelle est votre site ? [par] [gre] [ren] [str] : ')
+##
+##    if ville == 'gre':
+##
+##        mycursor.execute('SELECT Mot_de_passe FROM gre WHERE id = "%s" ', login)
+##        result = mycursor.fetchall()
+##        db.commit()
+##        if result == mdp:
+##            print('Vous êtes connecté')
+##        else:
+##            print('Erreur de connexion. Login ou mdp eronné')
+##            login = input("Veuillez saisir votre login à nouveau : ")
+##            mdp = input("Veuillez saisir votre mdp : ")
+##            connexion(login, mdp)
+##
+##    elif ville == 'str':
+##        mycursor.execute('SELECT Mot_de_passe FROM str WHERE id = %s ', (x))
+##        result = mycursor.fetchall()
+##        db.commit()
+##        if result == mdp:
+##            print('Vous êtes connecté')
+##        else:
+##            print('Erreur de connexion. Login ou mdp eronné')
+##            login = input("Veuillez saisir votre login à nouveau : ")
+##            mdp = input("Veuillez saisir votre mdp : ")
+##            connexion(login, mdp)
+##
+##    elif ville == 'par':
+##        mycursor.execute('SELECT Mot_de_passe FROM par WHERE id = %s ', (x))
+##        result = mycursor.fetchall()
+##        db.commit()
+##        if result == mdp:
+##            print('Vous êtes connecté')
+##        else:
+##            print('Erreur de connexion. Login ou mdp eronné')
+##            login = input("Veuillez saisir votre login à nouveau : ")
+##            mdp = input("Veuillez saisir votre mdp : ")
+##            connexion(login, mdp)
+##
+##    elif ville == 'ren':
+##        mycursor.execute('SELECT Mot_de_passe FROM ren WHERE id = %s ', (x))
+##        result = mycursor.fetchall()
+##        db.commit()
+##        if result == mdp:
+##            print('Vous êtes connecté')
+##        else:
+##            print('Erreur de connexion. Login ou mdp eronné')
+##            login = input("Veuillez saisir votre login à nouveau : ")
+##            mdp = input("Veuillez saisir votre mdp : ")
+##            connexion(login, mdp)
+##
+##    else:
+##        print("La ville saisie n'est pas valide")
+##        connexion(login, mdp)
+
